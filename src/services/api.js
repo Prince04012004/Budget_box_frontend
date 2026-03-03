@@ -1,7 +1,7 @@
 import axios  from "axios";
 
 const api=axios.create({
-    baseURL:"https://budget-box-backend-7zhw.onrender.com"
+    baseURL:"https://budget-box-backend-7zhw.onrender.com/api"
 })
 //Add token to header
 
