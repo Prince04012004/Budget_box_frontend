@@ -26,7 +26,13 @@ const Addtransaction = () => {
   const handlesubmit = async (e) => {
     e.preventDefault();
     try {
-      await API.post("/addexpense", formdata);
+      const finalData = {
+        ...formdata,
+        category: formdata.category.toLowerCase().trim() 
+      };
+
+      await API.post("/addexpense", finalData);
+      
       setformdata({ title: "", amount: "", category: "", Date: today });
       toast.success("Transaction added 💰");
       navigate("/dashboard");
@@ -37,10 +43,8 @@ const Addtransaction = () => {
   };
 
   return (
-    // min-h-screen ke saath py-10 add kiya hai taaki mobile pe scroll space mile
     <div className="relative min-h-screen flex items-center justify-center bg-[#0a0a14] bg-gradient-to-br from-[#0a0a14] via-[#1a1a3a] to-[#0a0a14] overflow-x-hidden font-sans p-4 sm:p-6 lg:p-8 py-10">
       
-      {/* Background Glows - Mobile pe size thoda chota rakha hai */}
       <div className="absolute top-[-5%] left-[-5%] w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-indigo-600/20 rounded-full blur-[80px] sm:blur-[100px] pointer-events-none" />
       <div className="absolute bottom-[-5%] right-[-5%] w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-purple-600/20 rounded-full blur-[80px] sm:blur-[100px] pointer-events-none" />
 
@@ -49,7 +53,6 @@ const Addtransaction = () => {
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 w-full max-w-md mx-auto"
       >
-        {/* Back Button - Mobile pe tap target bada rakha hai */}
         <button 
           onClick={() => navigate("/dashboard")} 
           className="flex items-center gap-2 text-slate-500 hover:text-white mb-4 sm:mb-6 transition-all text-[10px] sm:text-xs font-bold tracking-widest uppercase p-2"
@@ -57,9 +60,8 @@ const Addtransaction = () => {
           <FiArrowLeft /> Dashboard
         </button>
 
-        {/* Main Card - Mobile pe padding kam (p-6) aur Desktop pe zyada (p-10) */}
         <div className="bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10">
-          <div className="flex flex-col items-center mb-6 sm:mb-8">
+          <div className="flex flex-col items-center mb-6 sm:mb-8 text-center">
             <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-500/30 mb-4 text-white text-xl sm:text-2xl">
               <FiPlusCircle />
             </div>
@@ -68,25 +70,44 @@ const Addtransaction = () => {
           </div>
 
           <form onSubmit={handlesubmit} className="space-y-4">
-            {/* Input fields generic banaye hain jo har screen size pe fit ho jayein */}
-            {[
-              { name: "title", type: "text", placeholder: "What did you buy?", icon: FiTag },
-              { name: "amount", type: "number", placeholder: "Amount (₹)", icon: FiDollarSign },
-              { name: "category", type: "text", placeholder: "Category (Food, Travel...)", icon: FiTag }
-            ].map((field, idx) => (
-              <div key={idx} className="relative">
-                <field.icon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  type={field.type}
-                  name={field.name}
-                  placeholder={field.placeholder}
-                  value={formdata[field.name]}
-                  onChange={handlechange}
-                  required
-                  className="w-full pl-12 pr-4 py-3.5 sm:py-4 bg-white/5 text-white border border-white/10 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-600 text-sm"
-                />
-              </div>
-            ))}
+            <div className="relative">
+              <FiTag className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+              <input
+                type="text"
+                name="title"
+                placeholder="What did you buy?"
+                value={formdata.title}
+                onChange={handlechange}
+                required
+                className="w-full pl-12 pr-4 py-3.5 sm:py-4 bg-white/5 text-white border border-white/10 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-600 text-sm"
+              />
+            </div>
+
+            <div className="relative">
+              <FiDollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+              <input
+                type="number"
+                name="amount"
+                placeholder="Amount (₹)"
+                value={formdata.amount}
+                onChange={handlechange}
+                required
+                className="w-full pl-12 pr-4 py-3.5 sm:py-4 bg-white/5 text-white border border-white/10 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-600 text-sm"
+              />
+            </div>
+
+            <div className="relative">
+              <FiTag className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+              <input
+                type="text"
+                name="category"
+                placeholder="Category (food, travelling, others)"
+                value={formdata.category}
+                onChange={handlechange}
+                required
+                className="w-full pl-12 pr-4 py-3.5 sm:py-4 bg-white/5 text-white border border-white/10 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-600 text-sm"
+              />
+            </div>
 
             <div className="relative group">
               <FiCalendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
