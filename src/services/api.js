@@ -2,6 +2,7 @@ import axios  from "axios";
 
 const api=axios.create({
     baseURL:"https://budget-box-backend-7zhw.onrender.com/api"
+    // baseURL:"http://localhost:3000/api"
 })
 //Add token to header
 
