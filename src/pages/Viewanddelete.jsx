@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FiTrash2, FiEdit2, FiArrowLeft, FiFilter } from "react-icons/fi"; 
+import { FiTrash2, FiEdit2, FiArrowLeft, FiFilter, FiCalendar } from "react-icons/fi"; 
 import API from "../services/api.js";
 import toast from "react-hot-toast";
 
@@ -33,6 +33,12 @@ const Viewanddelete = () => {
     }
   };
 
+  // Date Formatting Helper
+  const formatDate = (dateString) => {
+    const options = { day: 'numeric', month: 'short', year: 'numeric' };
+    return new Date(dateString).toLocaleDateString('en-IN', options);
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a14] bg-gradient-to-br from-[#0a0a14] via-[#1a1a3a] to-[#0a0a14] text-white font-sans p-4 sm:p-6 md:p-10 relative overflow-x-hidden">
       
@@ -42,7 +48,7 @@ const Viewanddelete = () => {
 
       <div className="max-w-4xl mx-auto relative z-10">
         
-        {/* Header Section - Mobile Friendly */}
+        {/* Header Section */}
         <header className="flex justify-between items-center mb-8 sm:mb-10">
           <motion.button 
             whileHover={{ x: -5 }}
@@ -74,13 +80,22 @@ const Viewanddelete = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="group bg-white/5 backdrop-blur-xl border border-white/10 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-white/[0.08] hover:border-indigo-500/30 transition-all shadow-xl mx-1"
+                className="group bg-white/5 backdrop-blur-xl border border-white/10 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] flex flex-col sm:row justify-between items-start sm:items-center gap-4 hover:bg-white/[0.08] hover:border-indigo-500/30 transition-all shadow-xl mx-1"
               >
                 {/* Left Side: Info */}
                 <div className="flex flex-col gap-0.5 sm:gap-1 w-full sm:w-auto">
-                  <span className="text-[8px] sm:text-[10px] font-black text-indigo-400 uppercase tracking-widest">
-                    {transaction.category}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[8px] sm:text-[10px] font-black text-indigo-400 uppercase tracking-widest">
+                      {transaction.category}
+                    </span>
+                    <span className="h-1 w-1 bg-white/20 rounded-full" />
+                    {/* --- DATE SECTION --- */}
+                    <div className="flex items-center gap-1 text-slate-500 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest">
+                      <FiCalendar size={10} />
+                      {formatDate(transaction.date)}
+                    </div>
+                  </div>
+                  
                   <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight truncate max-w-[250px]">
                     {transaction.title}
                   </h3>
@@ -89,7 +104,7 @@ const Viewanddelete = () => {
                   </p>
                 </div>
 
-                {/* Right Side: Buttons - Fixed width on mobile for better touch experience */}
+                {/* Right Side: Buttons */}
                 <div className="flex gap-3 sm:gap-2 w-full sm:w-auto justify-end border-t border-white/5 sm:border-none pt-4 sm:pt-0">
                   <motion.button
                     whileHover={{ scale: 1.1 }}

@@ -21,18 +21,25 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [targetPos, setTargetPos] = useState({ x: 0, y: 0 });
 
+  // Function to get data from Backend
   const fetchdata = async () => {
     try {
       const res = await API.get("/dashboard");
       const { savingsToday, lastAnimTime, monthlyincome } = res.data;
+      
       const previousAnimTime = localStorage.getItem("lastProcessedAnim");
 
-      if (savingsToday > 0 && lastAnimTime !== previousAnimTime) {
+      if (!previousAnimTime) {
+        localStorage.setItem("lastProcessedAnim", lastAnimTime || "initial_sync");
+        setShowAnimation(false);
+      } 
+      else if (savingsToday > 0 && lastAnimTime && lastAnimTime !== previousAnimTime) {
         setShowAnimation(true);
       }
+
       setdata(res.data);
       setNewIncome(monthlyincome);
-    } catch (err) { console.log(err); }
+    } catch (err) { console.log("Error fetching data:", err); }
   };
 
   useEffect(() => {
@@ -41,6 +48,7 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // When user clicks "Collect Now"
   const handleCollect = () => {
     if (walletRef.current) {
       const rect = walletRef.current.getBoundingClientRect();
@@ -57,12 +65,13 @@ const Dashboard = () => {
     setTimeout(() => {
       setShowAnimation(false);
       setIsCollecting(false);
+      
+      // 1. Mark this animation as seen in local storage
       localStorage.setItem("lastProcessedAnim", data.lastAnimTime);
-      setdata(prev => ({ 
-        ...prev, 
-        wallet: prev.wallet + prev.savingsToday, 
-        savingsToday: 0 
-      }));
+      
+      // 2. 🔥 REFRESH DATA FROM BACKEND: This ensures the refill shows up on screen
+      fetchdata(); 
+      
       toast.success("Added to Wallet! 💰");
     }, 1500);
   };
@@ -87,7 +96,6 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-[#0a0a14] text-white font-sans overflow-x-hidden pb-20">
       
-      {/* COIN ANIMATION - Mobile Optimized Spread */}
       <AnimatePresence>
         {showAnimation && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center">
@@ -115,14 +123,11 @@ const Dashboard = () => {
       </AnimatePresence>
 
       <div className="max-w-4xl mx-auto p-4 sm:p-6 md:p-10">
-        
-        {/* RESPONSIVE HEADER */}
         <header className="flex justify-between items-center mb-8 gap-4">
-          <div className="flex items-center gap-3" onClick={() => navigate("/")}>
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg"><FiTrendingUp className="text-white text-xl" /></div>
             <h1 className="text-xl font-black tracking-tighter uppercase italic hidden sm:block">BUDGETBOX</h1>
           </div>
-          
           <div className="flex items-center gap-2">
             <motion.div ref={walletRef} className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 md:px-5 md:py-2.5 rounded-xl">
                <FiCreditCard className="text-emerald-400 text-sm md:text-base" />
@@ -132,13 +137,10 @@ const Dashboard = () => {
           </div>
         </header>
 
-        {/* MAIN BALANCE CARD */}
         <div className="grid grid-cols-1 gap-4">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-gradient-to-br from-[#1a1a3a] to-[#11112b] border border-white/10 rounded-[2.5rem] p-6 md:p-10 shadow-2xl relative overflow-hidden">
             <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Available Funds</p>
             <h2 className={`text-5xl md:text-7xl font-black tracking-tighter mb-10 ${totalRemaining < 0 ? 'text-rose-500' : 'text-white'}`}>₹{totalRemaining.toLocaleString()}</h2>
-            
-            {/* ACTION BUTTONS: Full width on mobile */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button onClick={() => navigate("/addtransaction")} className="bg-white text-indigo-900 py-4 rounded-2xl font-black text-xs uppercase italic flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg"><FiPlus strokeWidth={4} /> New Spend</button>
               <button onClick={() => navigate("/checkgraph")} className="bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase italic flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg"><FiBarChart2 /> Analytics</button>
@@ -146,7 +148,6 @@ const Dashboard = () => {
             </div>
           </motion.div>
 
-          {/* DAILY LIMIT CARD */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={`rounded-[2.5rem] p-6 md:p-8 flex flex-col justify-between border ${isOverBudget ? 'bg-rose-900/20 border-rose-500/30' : 'bg-[#1a1a3a] border-white/10'}`}>
             <div className="flex justify-between items-center mb-6">
               <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Today's Usage</p>
@@ -164,7 +165,6 @@ const Dashboard = () => {
           </motion.div>
         </div>
 
-        {/* INCOME EDIT ROW */}
         <div className="mt-4 bg-[#1a1a3a]/50 border border-white/5 p-4 rounded-2xl flex items-center justify-between">
           <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><FiPieChart /> Monthly Goal</span>
           <div className="flex items-center gap-3">
@@ -179,7 +179,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* CATEGORY GRID: 2 Columns on Mobile */}
         <div className="mt-10">
           <div className="flex items-center gap-3 mb-6">
             <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em] italic shrink-0">Daily Breakdown</h3>
