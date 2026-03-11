@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { 
   FiPlus, FiClock, FiLogOut, FiTrendingUp, FiPieChart, 
-  FiBarChart2, FiHome, FiEdit2, FiCheck, FiX, FiCreditCard, FiZap
+  FiBarChart2, FiEdit2, FiCheck, FiX, FiCreditCard, FiZap, FiArrowLeft
 } from "react-icons/fi";
 import API from "../services/api.js";
 import toast from "react-hot-toast";
@@ -16,17 +16,16 @@ const Dashboard = () => {
   const [updating, setUpdating] = useState(false);
   const [showAnimation, setShowAnimation] = useState(false);
   const [isCollecting, setIsCollecting] = useState(false);
+  const [isWalletOpen, setIsWalletOpen] = useState(false); // <--- NEW STATE
   
   const walletRef = useRef(null);
   const navigate = useNavigate();
   const [targetPos, setTargetPos] = useState({ x: 0, y: 0 });
 
-  // Function to get data from Backend
   const fetchdata = async () => {
     try {
       const res = await API.get("/dashboard");
       const { savingsToday, lastAnimTime, monthlyincome } = res.data;
-      
       const previousAnimTime = localStorage.getItem("lastProcessedAnim");
 
       if (!previousAnimTime) {
@@ -48,7 +47,6 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // When user clicks "Collect Now"
   const handleCollect = () => {
     if (walletRef.current) {
       const rect = walletRef.current.getBoundingClientRect();
@@ -65,13 +63,8 @@ const Dashboard = () => {
     setTimeout(() => {
       setShowAnimation(false);
       setIsCollecting(false);
-      
-      // 1. Mark this animation as seen in local storage
       localStorage.setItem("lastProcessedAnim", data.lastAnimTime);
-      
-      // 2. 🔥 REFRESH DATA FROM BACKEND: This ensures the refill shows up on screen
       fetchdata(); 
-      
       toast.success("Added to Wallet! 💰");
     }, 1500);
   };
@@ -96,6 +89,41 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-[#0a0a14] text-white font-sans overflow-x-hidden pb-20">
       
+      {/* --- NEW WALLET SCREEN OVERLAY --- */}
+      <AnimatePresence>
+        {isWalletOpen && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 z-[110] bg-[#0a0a14]/95 backdrop-blur-2xl flex flex-col items-center justify-center p-6"
+          >
+            <button 
+              onClick={() => setIsWalletOpen(false)} 
+              className="absolute top-10 left-10 p-4 bg-white/5 border border-white/10 rounded-full text-slate-400 hover:text-white transition-all"
+            >
+              <FiArrowLeft size={24} />
+            </button>
+
+            <motion.div 
+              initial={{ y: 20 }} animate={{ y: 0 }}
+              className="w-full max-w-sm bg-gradient-to-br from-emerald-500 to-teal-700 p-10 rounded-[3rem] shadow-[0_20px_50px_rgba(16,185,129,0.3)] text-center relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl" />
+              <FiCreditCard className="text-white/20 text-8xl absolute -bottom-5 -left-5 rotate-12" />
+              
+              <p className="text-emerald-100/70 text-sm font-black uppercase tracking-[0.2em] mb-2">Total Balance</p>
+              <h2 className="text-6xl font-black tracking-tighter text-white italic drop-shadow-lg">
+                ₹{data.wallet?.toLocaleString()}
+              </h2>
+            </motion.div>
+
+            <p className="mt-8 text-slate-500 font-bold text-xs uppercase tracking-widest">Digital Wallet Secure</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* --- EXISTING SAVINGS ANIMATION --- */}
       <AnimatePresence>
         {showAnimation && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center">
@@ -129,7 +157,12 @@ const Dashboard = () => {
             <h1 className="text-xl font-black tracking-tighter uppercase italic hidden sm:block">BUDGETBOX</h1>
           </div>
           <div className="flex items-center gap-2">
-            <motion.div ref={walletRef} className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 md:px-5 md:py-2.5 rounded-xl">
+            {/* --- MODIFIED WALLET CLICKABLE AREA --- */}
+            <motion.div 
+              ref={walletRef} 
+              onClick={() => setIsWalletOpen(true)} // <--- TRIGGERS OVERLAY
+              className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 md:px-5 md:py-2.5 rounded-xl cursor-pointer hover:bg-emerald-500/20 transition-all active:scale-95"
+            >
                <FiCreditCard className="text-emerald-400 text-sm md:text-base" />
                <span className="text-sm md:text-base font-black text-emerald-400">₹{data.wallet?.toLocaleString()}</span>
             </motion.div>
@@ -137,6 +170,7 @@ const Dashboard = () => {
           </div>
         </header>
 
+        {/* ... Rest of the UI remains exactly the same ... */}
         <div className="grid grid-cols-1 gap-4">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-gradient-to-br from-[#1a1a3a] to-[#11112b] border border-white/10 rounded-[2.5rem] p-6 md:p-10 shadow-2xl relative overflow-hidden">
             <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Available Funds</p>
